@@ -4,3 +4,5 @@ The main aim of this project is to records of consumers and sends them messages 
 
 Login with MobileNo: 8756443987 password: 123456
 No body else can sign-up until the admin has allowed his/her signup.
+
+Run npm install to install all dependencies and then use node app to run the project.
