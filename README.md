@@ -5,8 +5,8 @@ The main aim of this project is to keep records of consumers and sends them mess
 Login with Phone Number: 8756443987 Password: 123456
 
 How to run it on local machine-
-* 1. Clone the repository
-* 2. In the project directory-
-  * 2.1. Run npm install in the terminal to install all dependencies
-  * 2.2. Run node app in the terminal to start the server.
-  * 2.3. Go to - http://localhost:3000/
+* Clone the repository
+* In the project directory-
+  * Run npm install in the terminal to install all dependencies
+  * Run node app in the terminal to start the server.
+  * Go to - http://localhost:3000/
