@@ -49,12 +49,12 @@ function uuidGenerator(e)
   e.preventDefault();
   console.log("uuid called");
   var name=document.getElementById("name").value;
-  var phoneno=document.getElementById("phoneno").value;
-  if(name!=""&&phoneno!=""){
+  var adharno=document.getElementById("adharno").value;
+  if(name!=""&&adharno!=""){
   var field=document.getElementById("uuidContainer");
   var btn=document.getElementById("uuidbtn");
   var a=forSplit(name);
-  var uuid=phoneno+a;
+  var uuid=adharno+a;
   document.getElementById("uuidContainer").style.display="block";
   document.getElementById("uuid").value=uuid;
   document.getElementById("uuidCont").style.display="none";

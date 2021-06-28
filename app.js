@@ -34,15 +34,19 @@ mongoose.connect("mongodb+srv://poshan_test:poshan123@cluster0-cbwkg.mongodb.net
 				 { useUnifiedTopology: true,
 				   useNewUrlParser: true ,
 				   useFindAndModify: false,
-				   useCreateIndex: true}).then(()=>{
+				   useCreateIndex: true})
+				   .then(()=>{
 					   console.log("Database Connected")
+					})
+					.catch((err) => {
+						console.log(err);
 					});
 
 
 
-app.listen(3100, function() {
+app.listen(3000, function() {
 	console.log("Server started on port 3000");
-	});
+});
 
 
 /////////////////////////////////////////////////////////////////////////////////// FUNCTIONS USED
@@ -438,10 +442,12 @@ app.post("/presmsSend",function(req,res){
 	  			console.log(data);
 	  			res.send("Registered");
 	  });
-})
+});
+
 app.get("/",function(req,res){
 	res.render("index");
-})
+});
+
 app.get("*/",function(req,res){
 	res
 	.status('404')
