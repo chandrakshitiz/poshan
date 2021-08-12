@@ -9,6 +9,7 @@ $(document).ready(function(){
 				alert("Click on Submit");
 				$("#checkUserbtn").hide();
 				$("#searchUserbtn").css("display","block");
+				$("#uuid").prop("readonly", true);
 			}
 			else
 				alert("No user with this UUID");

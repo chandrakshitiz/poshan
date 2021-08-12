@@ -8,6 +8,7 @@ $("#checkUserbtn").click(function(event){
 				alert("Click on Submit");
 				$("#checkUserbtn").hide();
 				$("#searchUserbtn").css("display","block");
+				$("#uuid").prop("readonly", true);
 			}
 			else
 				alert("No user with this UUID registered under you");
