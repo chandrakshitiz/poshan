@@ -7,94 +7,111 @@ const mdm_given_no = require('./schema/mdmschema.js');
 const adminlist = require('./schema/adminlistSchema.js');
 const User =require('./schema/userlist');
 const Worker= require('./schema/signup');
+const { result } = require('lodash');
 const router = express.Router();
+
 router.use(express.static("public"));
-router.use(express.json({limit:'10kb'}));
+router.use(express.json());
 router.use(cookieparser());
 
 
-const verify = function(req,res,next)
-{
-    if(!req.cookies.jwt)
-  {res.redirect("/login");}
-  const decoded = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai');
-    next();
-}
-  
- const dashboard = function (req,res){
-   const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
-   Worker.findOne({adharno:id},function(err,result){
-    if(err) throw err;
-    else
-    {
-      res.render("dashboard",{result:result});
+const verify = function(req,res,next) {
+    if(!req.cookies.jwt) {
+      res.redirect("/login");
+      return;
     }
-   })
-    
-}
+    try { 
+      const decoded = jwt.verify(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai');
+    }
+    catch(ex) {
+      res.redirect("/login");
+      return;
+    }
+    next();
+};
+  
+const dashboard = function (req,res) {
+  const id = jwt.verify(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
+  Worker.findOne({adharno:id},function(err,result){
+    if(err) throw err;
+    else {
+      if(result)
+        res.render("dashboard",{result:result});
+      else 
+        res.redirect("/login");
+    }
+  });  
+};
 
-const createuser = function (req,res){
-    res.render("add_user.ejs");
- }
+// const createuser = function (req,res) {
+//     res.render("add_user.ejs");
+// };
  
 
-const adduser = function (req,res){
+const adduser = function (req,res) {
     res.render("add_user");
-}
+};
 
-const newUser=function(req,res){
-  const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
+const newUser=function(req,res) {
+  const id = jwt.verify(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
   console.log(id);
   const obj=req.body;
   const date=new Date();
-  adminlist.findOne({adharno:id},function(err,result){
+  adminlist.findOne({adharno:id}, async function(err,result){
     if(err)
       throw err;
-    else
-    {
-    const newUser=new User({
-      name:obj.name,
-      adharno:obj.adharno,
-      uuid:obj.uuid,
-      gname:obj.gname,
-      mname:obj.mname,
-      gender:obj.gender,
-      phoneno:obj.phoneno,
-      acode:result.acode,
-      dob:obj.dob,
-      age:obj.age,
-      address:obj.address,
-      category:obj.category,
-      caste:obj.caste,
-      religion:obj.religion,
-      mstatus:obj.mstatus,
-      fstatus:obj.fstatus,
-      phystatus:obj.phystatus,
-      pstatus:obj.pstatus,
-      lat:obj.lat,
-      long:obj.long,
-      uvac:[{vname:"String",date:date,vcode:"String",dose:"String",route:"String",site:"String"}],
-      pvac:[{vname:"String",date:date,vcode:"String",dose:"String",route:"String",site:"String"}],
-      record:[{problem:"String",date:"String",supplement:"String",duration:"String",dose:"String"}]
-    });
-    newUser.save();
-    Worker.findOneAndUpdate({adharno:id},{$inc:{usernum:1}},function(err2,result2){
-      if(err2) throw err2;
-      else
-      res.redirect("/dashboard");
-    });
+    else if(result){
+      const newUser=new User({
+        name:obj.name,
+        adharno:obj.adharno,
+        uuid:obj.uuid,
+        gname:obj.gname,
+        mname:obj.mname,
+        gender:obj.gender,
+        phoneno:obj.phoneno,
+        acode:result.acode,
+        dob:obj.dob,
+        age:obj.age,
+        address:obj.address,
+        category:obj.category,
+        caste:obj.caste,
+        religion:obj.religion,
+        mstatus:obj.mstatus,
+        fstatus:obj.fstatus,
+        phystatus:obj.phystatus,
+        pstatus:obj.pstatus,
+        lat:obj.lat,
+        long:obj.long,
+        uvac:[{vname:"String",date:date,vcode:"String",dose:"String",route:"String",site:"String"}],
+        pvac:[{vname:"String",date:date,vcode:"String",dose:"String",route:"String",site:"String"}],
+        record:[{problem:"String",date:"String",supplement:"String",duration:"String",dose:"String"}]
+      });
+      try {
+        await newUser.save();
+        Worker.findOneAndUpdate({adharno:id},{$inc:{usernum:1}},function(err2,result2){
+          if(err2) throw err2;
+          else
+            res.redirect("/dashboard");
+        });
+      }
+      catch(ex) {
+        console.log(ex);
+        res.redirect('/dashboard');
+      }
+    }
+    else {
+      res.redirect('/dashboard');
     }
   });
-  };
+};
 
 
 const vaccinelist =function(req,res){
   Vaccine.find({},function(err,result){
    if(err) throw err;
-   else
-   {
-      res.render("vaccinelist.ejs",{result:result});
-  }
+   else {
+     res.render("vaccinelist.ejs",{result:result});
+   }
   });
 }
 
@@ -102,50 +119,53 @@ const manage_user =function(req,res){
   res.render("manage_user.ejs");
 }
 
+const istDate = function() {
+  var d=new Date();
+  d.setHours(d.getHours() + 5);
+  d.setMinutes(d.getMinutes() + 12);
+  return d;
+};
+
 const mdmgiven=function(req,res){
   const obj = req.body;
-  const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
-  const today=new Date();
+  const id = jwt.verify(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
+  const today=istDate();
+  console.log(today);
   const d=(today.getDate()).toString();
   const m=(today.getMonth()+1).toString();
   const y=(today.getFullYear()).toString();
   const date=d+"/"+m+"/"+y;
   adminlist.find({adharno:id},function(err,result){
-    if(err)
+  if(err)
     throw err;
-  else
-  {
-      const mdm_update = new mdm_given_no({
+  else{
+    const mdm_update = new mdm_given_no({
       number:obj.number,
       date:date,
       acode:result[0].acode  
-      })
-      mdm_update.save();
-      res.redirect("/dashboard/nutrition");
+    });
+    mdm_update.save();
+    res.redirect("/dashboard/nutrition");
   }
   })
-}
+};
 
 const addmdmchild = function(req,res){
-  const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
-
   const uuid=req.body.uuid;
-  
   User.findOne({uuid:uuid},function(err,result){
     if(err)
-    throw err;
-  else
-  {   
+      throw err;
+    else {   
       const newchildmdm = new childmdm({
-      name:result.name,
-      uuid:uuid,
-      acode:result.acode  
-      })
+        name:result.name,
+        uuid:uuid,
+        acode:result.acode  
+      });
       newchildmdm.save();
       res.redirect("/dashboard/nutrition");
-  }
-  })
-}
+    }
+  });
+};
 
 const checkup =function(req,res){
   res.render("checkup.ejs");
@@ -155,13 +175,15 @@ const nutrition =function(req,res){
   res.render("nutrition.ejs");
 }
 
-const addVaccine =function(req,res){
+const addVaccine=function(req,res){
   const obj=req.body;
-  Vaccine.find({for:obj.for},function(err,result){
+  Vaccine.findOne({vcode:obj.vcode}, async function(err,result){
     if(err)
       throw err;
-    else
-    {
+    else if(result) {
+      res.redirect("/dashboard/vaccinelist");
+    }
+    else {
       const newVaccine=new Vaccine({
         vcode:obj.vcode,
         name:obj.name,
@@ -170,30 +192,31 @@ const addVaccine =function(req,res){
         dose:obj.dose,
         site:obj.site,
         route:obj.route
-        });
-      newVaccine.save();
+      });
+      try {
+        await newVaccine.save();
+      }
+      catch(ex) {
+        console.log(ex);
+      }
       res.redirect("/dashboard/vaccinelist");
     }
   })
-}
+};
 const checkAddUser=function(req,res){
   const uuid=req.body.uuid;
   User.findOne({uuid:uuid},function(err1,result1){
     if(err1) throw err1;
     else
     {
-      if(result1)
+      if(result1) {
         childmdm.findOne({uuid:uuid},function(err,result){
           if(err) throw err;
-          else
-          {
+          else {
             if(result)
               res.send("already");
-            else 
-            {
-              if(result1.category==="child")
-              {
-                if(result1.acode)
+            else {
+              if(result1.category==="child") {
                 res.send("not already");
               }
               else
@@ -201,38 +224,38 @@ const checkAddUser=function(req,res){
             }
           }
         });
+      }
       else
         res.send("no such user");
     }
-});
-}
+  });
+};
+
 const removechild =function(req,res){
   const uuid=req.body.uuid;
   childmdm.deleteOne({uuid:uuid},function(err,result){
     if(err)
-    throw err;
-  else
-  {   //console.log(result)
-      res.redirect("/dashboard/nutrition");
-  }
-  })
+      throw err;
+    else {   //console.log(result)
+        res.redirect("/dashboard/nutrition");
+    }
+  });
+};
 
-}
 const checkRemoveUser=function(req,res){
   const uuid=req.body.uuid;
   childmdm.findOne({uuid:uuid},function(err,result){
     if(err) throw err;
     else
     {
-      if(result)
-        {
+      if(result) {
           res.send(result.name);
-        }
+      }
       else
         res.send("not already");
     }
   });
-}
+};
 
 const mdmGraph=function(req,res){
   const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
@@ -242,10 +265,9 @@ const mdmGraph=function(req,res){
       throw err;
     else
     {
-      if(result)
-      {
+      if(result){
         const acode=result.acode;
-        mdm_given_no.find({acode:acode},function(err1,result1){
+        mdm_given_no.find({acode:acode}).limit(15).exec(function(err1,result1){
           if(err1) throw err1;
           else
           {
@@ -258,7 +280,7 @@ const mdmGraph=function(req,res){
                 return item.number;
               });
               const obj={date:date,number:number};
-              res.send(JSON.stringify(obj));
+              res.send(obj);
             }
             else
               res.send("nodata");
@@ -269,7 +291,7 @@ const mdmGraph=function(req,res){
   });
 }
 function todayDate(){
-  const today=new Date();
+  const today=istDate();
   const d=(today.getDate()).toString();
   const m=(today.getMonth()+1).toString();
   const y=(today.getFullYear()).toString();
@@ -277,60 +299,45 @@ function todayDate(){
   return date;
 }
 const mdmStatus=function(req,res){
-  const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
-  console.log(id);
+  const id = jwt.verify(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
   adminlist.findOne({adharno:id},function(err,result){
     if(err)
       throw err;
-    else
-    {
-      if(result)
-      {
+    else {
+      if(result) {
         const acode=result.acode;
         const date=todayDate();
-        mdm_given_no.find({acode:acode},function(err1,result1){
+        mdm_given_no.findOne({acode:acode, date:date},function(err1,result1){
           if(err1) throw err1;
-          else
-          {
-              if(result1)
-              {
-                var k=0;
-                result1.forEach(function(item){
-                  if(item.date==date)
-                  {
-                    const obj1={date:date,number:item.number};
-                    res.send(JSON.stringify(obj1));
-                    k=1;
-                  }
-                });
-                if(k==0)
-                  res.send("nodata");
-
+          else {
+              if(result1) {
+                console.log(result1);
+                res.send({date:result1.date,number:result1.number});
               }
               else
                 res.send("nodata");
           }
         });
       }
+      else
+        res.send("nodata");
     }
   });
-}
+};
+
 const userVaccines=function(req,res){
   const uuid=req.body.uuid;
   User.findOne({uuid:uuid},function(err,result){
     if(err) throw err;
     else
     {
-      if(result)
-      {
-        const uvac=result.uvac;
-        const pvac=result.pvac;
+      if(result){
         res.render("vaccinelistUser.ejs",{result:result});
       }
     }
   });
+};
 
-}
 const addUserVaccine=function(req,res){
   const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
   const obj=req.body;
@@ -370,8 +377,6 @@ const addUserVaccine=function(req,res){
             {
               if(result)
               {
-                const uvac=result.uvac;
-                const pvac=result.pvac;
                 res.render("vaccinelistUser.ejs",{result:result});
               }
               else
@@ -381,13 +386,13 @@ const addUserVaccine=function(req,res){
         }
       }
   });
-}
+};
+
 const doneUpcomingUserVaccine=function(req,res){
   const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
   const obj=req.body;
   const today=new Date();
   const d=new Date(obj.date);
-  console.log(d);
   Vaccine.findOne({vcode:obj.vcode},function(err,result){
     if(err) throw err;
     else
@@ -407,9 +412,7 @@ const doneUpcomingUserVaccine=function(req,res){
                 else
                 {
                   if(result2)
-                  {
-
-                      
+                  {   
                       Worker.findOneAndUpdate({adharno:id},{$inc:{vacnum:1}},{new:true},function(err4,result4){
                       if(err4) throw err4;
                       else{
@@ -422,25 +425,17 @@ const doneUpcomingUserVaccine=function(req,res){
                           } 
                         });
                       }
-                       
                     });
                   }
-                  else console.log("nahi ho rha ");
                 }
-                
-              });
-                
+              }); 
               }
-              else
-                console.log("nahi ho rha 1");
             }
          });
       }
-      else
-        console.log("nahi ho rha 0");
     }
   });
-}
+};
 const simplyCheckUser=function(req,res){
   const uuid=req.body.uuid;
   User.findOne({uuid:uuid},function(err,result){
@@ -453,7 +448,7 @@ const simplyCheckUser=function(req,res){
         res.send("nouser");
     }
   });
-}
+};
 const userCheckUp=function(req,res){
   User.findOne({uuid:req.body.uuid},function(err,result){
     if(err) throw err;
@@ -464,7 +459,7 @@ const userCheckUp=function(req,res){
     }
   })
   
-}
+};
 const newRecord=function(req,res){
   const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
   const obj=req.body;const date=todayDate();
@@ -530,7 +525,7 @@ const heightChildGraph=function(req,res){
         const height=growth.map(function(item){
                 return item.height;});
         const obj={date:date,height:height};
-        res.send(JSON.stringify(obj));    
+        res.send(obj);    
       }
       else
         res.send("nodata");
@@ -552,7 +547,7 @@ const weightChildGraph=function(req,res){
         const weight=growth.map(function(item){
                 return item.weight;});
         const obj={date:date,weight:weight};
-        res.send(JSON.stringify(obj));    
+        res.send(obj);    
       }
       else
         res.send("nodata");
@@ -564,51 +559,45 @@ const childMonitoring=function(req,res){
 }
 
 const remove_user = function(req,res){ 
-   const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
-  
-   adminlist.findOne({adharno:id},function(err,result){const areacode=result.acode;
-    const uuid=req.body.uuid;
-    User.findOne({uuid:uuid},function(err,result1){
-    if(!result1){return res.send('notfound');}
-     if(err) throw err;
-     else if(areacode===result1.acode) {
-      User.deleteOne({uuid:uuid},function(err,result2){
-                   if(err)throw err;
-                   else{
-                    Worker.findOneAndUpdate({adharno:id},{$inc:{usernum:-1}},function(err2,result2){
-                    if(err2) throw err2;
-                    else
-                      res.send('deleted');
-                    });
-                       
-
-                   }
-      })
-
-     }
-     else{res.send('notregistered')}
-    });
-  
+   const id = jwt.verify(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
+   adminlist.findOne({adharno:id},function(err,result){
+    if(err) throw err;
+    if(result) {
+      const areacode=result.acode;
+      const uuid=req.body.uuid;
+      User.findOne({uuid:uuid,acode:areacode},function(err1,result1){
+        if(err1) throw err1;
+        if(!result1){return res.send('notfound');}
+        else{
+          User.deleteOne({uuid:uuid},function(err2,result2){
+            if(err2)throw err2;
+            else {
+              Worker.findOneAndUpdate({adharno:id},{$inc:{usernum:-1}},function(err2,result2){
+              if(err2) throw err2;
+              else
+                res.send('deleted');
+              });
+            }
+          });
+        }
+      });
+    } 
   });
-   
-}
+};
 
 const get_user = function(req,res){ 
-  const id = (jwt.verify)(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
-  
-  adminlist.findOne({adharno:id},function(err,result){const areacode=result.acode;
-   const uuid=req.body.uuid2;
-   User.findOne({uuid:uuid},function(err,result1){
-   if(!result1){return res.send('notfound');}
+  const id = jwt.verify(req.cookies.jwt,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai').id;
+  const uuid=req.body.uuid2;
+  User.findOne({uuid:uuid},function(err,result){
     if(err) throw err;
-    else if(areacode===result1.acode) {
-     res.send(result1);
+    if(!result){
+      return res.send('notfound');
     }
-    else{res.send('notregistered')}
-   });
- });
-  
-}
+    else {
+      res.send(result);
+    }
+  });
+};
 
 // const sms1=function(req,res)
 // {
@@ -636,15 +625,14 @@ router
   .route('/')
   .get(verify,dashboard);
 
-
 router
   .route('/adduser/newUser')
   .post(verify,newUser)
 
-  router
+router
   .route('/adduser')
   .get(verify,adduser)
-  .post(verify,createuser);
+  // .post(verify,createuser);
 
 router
   .route('/vaccinelist')

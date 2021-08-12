@@ -17,7 +17,6 @@ $(document).ready(function(){
 		if(uuid!="")
 		{
 		$.post("/dashboard/manage-user/remove-user/",{uuid:uuid},function(data,status){
-		if(data==='notregistered'){alert('SORRY the user '+uuid+' is not registered under you');}
 		if(data==='notfound'){alert('USER '+uuid+' NOT FOUND');}
 		if(data==='deleted'){alert('user '+uuid+' deleted successfully');}
 		e.preventDefault();
@@ -37,8 +36,7 @@ $("#getuser").click(function(e){
 	if(uuid2!="")
 	{
 	$.post("/dashboard/manage-user/get-user/",{uuid2:uuid2},function(data,status){
-	if(data==='notregistered'){alert('SORRY the user '+uuid2+' is not registered under you');}
-	else if(data==='notfound'){alert('USER '+uuid2+' NOT FOUND');}
+	if(data==='notfound'){alert('USER '+uuid2+' NOT FOUND');}
 	else
 	    {   
 			$('#uid').text(data.uuid);

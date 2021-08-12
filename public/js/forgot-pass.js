@@ -6,7 +6,7 @@ $(document).ready(function(){
   		if(num!="" && num.length==10)
   		{
         var flag=0;
-  			$.post("generateOTP",{number:num},function(data,status){
+  			$.post("/generateOTP",{number:num},function(data,status){
   				console.log(data);
           if(data==="Registered")
             flag=1;

@@ -54,44 +54,44 @@
           </div> -->
           <div class="w3-container" id="map-container" >
             <div class="w3-row-padding w3-white mapdiv">
-                          <h5>Current Location</h5>
-                          <div class="w3-tw divmapdiv" >
-            <iframe id="mapwa"  frameborder="0" class="map"></iframe>
-             </div>
-                          
-                        </div>
-                      </div>
+                    <h5>Current Location</h5>
+                    <div class="w3-tw divmapdiv" >
+                      <iframe id="mapwa"  frameborder="0" class="map"></iframe>
+                    </div>
+            </div>
+          </div>
      <div class="w3-panel" style="margin: 0 auto;">
           <div class="" >
             <div class="w3-full" style="">
               <div class="w3-white feedsdiv">
                 <h2 class="removehead" id="removeheader" style="margin-bottom: 24px;margin-right: 0">Recent Upcoming Doses :</h2>
-                  <ul class="w3-ul" style="text-align: left;color: #465881;width: 100%;">
+                <ul class="w3-ul" style="text-align: left;color: #465881;width: 100%;">
 
-                  <%if(result.feed!="undefined"){%>
-                  <% var d=new Date();d.setHours( d.getHours() + 5 );%>
-                  <%d.setDate(d.getDate() +2)%>
-                  <% d.setMinutes( d.getMinutes() + 30);console.log(d);%>
-                  <% var t=d.getTime();%>
-                  <%var dateObj1 = new Date();console.log(dateObj1);%> 
-                    <%dateObj1.setHours( dateObj1.getHours() + 5 );%>
-                  <% dateObj1.setMinutes( dateObj1.getMinutes() + 30);console.log(dateObj1);%>
-                    <% var t2=dateObj1.getTime()%> 
+                  <%if(result.feed){%>
+                    <% var d=new Date();%>
+                    <% d.setHours(d.getHours() + 5);%>
+                    <% d.setDate(d.getDate() + 7)%>
+                    <% d.setMinutes(d.getMinutes() + 30);%>
+                    <% var t1=d.getTime();%>
+                    <% d = new Date();%> 
+                    <% d.setHours(d.getHours() + 5);%>
+                    <% d.setMinutes(d.getMinutes() + 30);%>
+                    <% var t0=d.getTime()%> 
                     <% for(var i=0;i<(result.feed).length;i++){%>
-                    <% if((result.feed[i]).date.getTime()<=t&&(result.feed[i]).date.getTime()>=t2){%>
-                  <li class="w3-bar" style="width: 100%;">
-                   <div class="w3-bar-item" style="width: 100%;">
-                    <div class="w3-left">
-                      <span style="font-size: 1.5rem;">Name:&emsp;<strong><%=(result.feed[i]).name%></strong></span><br>
-                      <span>uid: <%=(result.feed[i]).uuid%> &emsp;Vaccine: <%=(result.feed[i]).vcode%> &emsp;Dated: <%=(result.feed[i]).date%></span>
-                    </div>
-                    <div class="w3-right">
-                        <i id="<%=result.feed[i].phoneno%>" class="fa fa-envelope fa-2x oof"></i>
-                      </div>
+                      <% if((result.feed[i]).date.getTime()<=t1&&(result.feed[i]).date.getTime()>=t0){%>
+                      <li class="w3-bar" style="width: 100%;">
+                      <div class="w3-bar-item" style="width: 100%;">
+                        <div class="w3-left">
+                          <span style="font-size: 1.5rem;">Name:&emsp;<strong><%=(result.feed[i]).name%></strong></span><br>
+                          <span>uid: <%=(result.feed[i]).uuid%> &emsp;Vaccine: <%=(result.feed[i]).vcode%> &emsp;Dated: <%=(result.feed[i]).date%></span>
+                        </div>
+                        <div class="w3-right">
+                            <i id="<%=result.feed[i].phoneno%>" class="fa fa-envelope fa-2x oof"></i>
+                          </div>
 
-                    </div>
-                  </li>
-                  <% console.log("hmm");} } }%>
+                        </div>
+                      </li>
+                  <% } } }%>
                   
                 </ul>
               </div>
@@ -106,15 +106,13 @@
               <div class="w3-white feedsdiv">
                 <h2 class="removehead" id="removeheader" style="margin-bottom: 24px;margin-right: 0">Pending Doses : </h2>
                   <ul class="w3-ul" style="text-align: left;color: #465881;width: 100%;">
-                <%if(result.feed!="undefined"){%>
-                  <% var d=new Date();%>
-                  <%var dateObj = new Date();%> 
-                           
-                    <%dateObj.setDate(dateObj.getDate());d.setHours( d.getHours() + 5 );%>
-                    <% dateObj.setMinutes( dateObj.getMinutes() + 30)  %>
-                    <% for(var i=0;i<(result.feed).length;i++){%>
-                    <%const t=dateObj.getTime();%>
-                    <% if((result.feed[i]).date.getTime()<=t){%>
+                <%if(result.feed){%>
+                  <% var d=new Date();%> 
+                  <% d.setHours(d.getHours() + 5);%>
+                  <% d.setMinutes(d.getMinutes() + 30)  %>
+                  <% for(var i=0;i<(result.feed).length;i++){%>
+                  <% const t=d.getTime();%>
+                  <% if((result.feed[i]).date.getTime()<=t){%>
                   <li class="w3-bar" style="width: 100%;">
                    <div class="w3-bar-item" style="width: 100%;">
                     <div class="w3-left">

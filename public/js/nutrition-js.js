@@ -33,6 +33,7 @@ $(document).ready(function(){
 					{
 						alert("Click on add button to add user to mid-day meal");
 						$("#addcheckbtn").hide();
+						$("#addinput").prop("readonly", true);
 						$("#addsubmitbtn").css("display","block");
 					}
 			});
@@ -46,10 +47,11 @@ $(document).ready(function(){
 		else
 		{
 			$.post("/dashboard/nutrition/removeCheckUser",{uuid:removeinput},function(data,status){
-				if(data!="not already")
+				if(data!=="not already")
 				{
 					alert("Click on remove button to remove "+ data +" from mid-day meal");
 					$("#removecheckbtn").hide();
+					$("#removeinput").prop("readonly", true);
 					$("#removesubmitbtn").css("display","block");
 				}
 				else
@@ -58,9 +60,8 @@ $(document).ready(function(){
 		}
 	});
 	$("#fordate").text(todayDate());
-	$.get("/dashboard/nutrition/mdmStatus",function(data,status){
-		console.log(data);
-		if(data=="nodata")
+	$.get("/dashboard/nutrition/mdmStatus", function(data,status){
+		if(data==="nodata")
 		{
 			$("#midDayData").hide();
 			$("#midDayEntry").css("display","block");
@@ -68,11 +69,13 @@ $(document).ready(function(){
 		}
 		else
 		{
-			const obj1=JSON.parse(data);
+			// const obj1=JSON.parse(data);
+			// console.log(obj1);
+			// console.log("d ",data);
 			$("#midDayEntry").hide();
 			$("#midDayEntrybtn").hide();
 			$("#midDayData").css("display","block");
-			$("#midDayData").text(obj1.number);
+			$("#midDayData").text(data.number);
 		}
 	});
 })

@@ -122,6 +122,7 @@ body {
 	border-top: 2px solid #465881 !important;
 }
 .mapdiv{
+	display:none;
 	text-align: left !important;
 	border-radius: 5px;
 	margin: auto;

@@ -4,7 +4,7 @@ $(document).ready(function(){
     console.log(data);
     if(data!="nodata")
     {
-      const obj=JSON.parse(data);
+      const obj=data;
       const arr=[];
       arr.push(['Date','Height'])
       for(var i=0;i<obj.date.length;i++)
@@ -35,7 +35,7 @@ $(document).ready(function(){
     console.log(data);
     if(data!="nodata")
     {
-      const obj=JSON.parse(data);
+      const obj=data;
       const arr=[];
       arr.push(['Date','Weight'])
       for(var i=0;i<obj.date.length;i++)

@@ -1,4 +1,3 @@
-const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const express = require("express");
@@ -8,11 +7,8 @@ const bcrypt = require('bcryptjs');
 const SendOtp = require('sendotp');
 const Worker= require('./schema/signup');
 const User= require('./schema/userlist');
-const lodash=require("lodash");
 const adminlist = require('./schema/adminlistSchema');
-const dotenv = require('dotenv');
 const cookieparser= require('cookie-parser');
-dotenv.config({ path: './config.env' });
 const dashboardroute = require('./dashboardroute');
 
 
@@ -20,7 +16,7 @@ const app = express();
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
-app.use(express.json({limit:'10kb'}));
+app.use(express.json());
 app.use(cookieparser());
 app.use("/dashboard",dashboardroute);
 
@@ -35,12 +31,12 @@ mongoose.connect("mongodb+srv://poshan_test:poshan123@cluster0-cbwkg.mongodb.net
 				   useNewUrlParser: true ,
 				   useFindAndModify: false,
 				   useCreateIndex: true})
-				   .then(()=>{
+			    .then(() => {
 					   console.log("Database Connected")
-					})
-					.catch((err) => {
+				})
+				.catch((err) => {
 						console.log(err);
-					});
+				});
 
 
 
@@ -53,29 +49,27 @@ app.listen(3000, function() {
 ///////////////////////////////////////////////////////////////////////////////////
 
 
-const signToken = id => {                                                                              //MAKE JWT
+const signToken = function(id) {                                                                              //GENERATE JWT
 	return jwt.sign({ id }, "manpreet-bag-pack-karo-teen-ghante-baad-flight-hai", {
 	  expiresIn: "90d"
 	});
-  };
+};
   
-  const createSendToken = (worker, statusCode, res) => {                                               //SEND JWT
-	const token = signToken(worker);
-	//console.log(token);
+const createSendToken = function(workerid, res) {                                               //SEND JWT
+	const token = signToken(workerid);
 	const cookieOptions = {
 	  expires: new Date(
-		Date.now() + "90d" * 24 * 60 * 60 * 1000
+		Date.now() + 90 * 24 * 60 * 60 * 1000
 	  ),
 	  httpOnly: true
 	};
 	res.cookie('jwt', token, cookieOptions);
-  };
+};
 
-
-const sendOtp = new SendOtp('311289AimzH3IlFub5e0ede7cP1');                                            //FUNCTION TO CREATE OTP
-  function randomInteger(min, max) {
+const sendOtp = new SendOtp('311289AimzH3IlFub5e0ede7cP1');                                            
+const randomInteger = function (min, max) {																		//FUNCTION TO CREATE OTP
 	return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
+}
 
   
 
@@ -96,8 +90,14 @@ app.get("/login",function(req,res){
 	else
 	{
 		token = req.cookies.jwt;
-		const decoded = promisify(jwt.verify)(token,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai');
-		res.redirect("/dashboard");
+		try {
+			const decoded = jwt.verify(token,'manpreet-bag-pack-karo-teen-ghante-baad-flight-hai');
+			res.redirect("/dashboard");
+		}
+		catch(ex) {
+			console.log(ex);
+			res.render("login-form"); 
+		}
 	}
 	
 })
@@ -120,19 +120,18 @@ app.post("/generateOTP",function(req,res){
 			if(result.length!=0)
 			{
 				const otp=randomInteger(100000,999999);
-				adminlist.findOneAndUpdate({phoneno:num},
-					{$set:{otp:otp}},function(err,found){
-						if(err)
-							throw err;
-						else
-							console.log("Updated");
-
-					});
-
-				sendOtp.send(number,"KKMAAD",otp, function (error, data) {
-	  			console.log(data);
-	  			res.send("Registered");
-	  			});
+				adminlist.findOneAndUpdate({phoneno:num},{$set:{otp:otp}},function(err1,found){
+						if(err1)
+							throw err1;
+						else {
+							sendOtp.send(number,"KKMAAD",otp, function (error, data) {
+								if(error) 
+									throw error;
+								else
+									res.send("Registered");
+							});
+						}
+				});
 			}
 			else
 			{
@@ -146,26 +145,23 @@ app.post("/generateOTP",function(req,res){
 
 //otp verification
 app.post("/verifyOTP",function (req,res){
-	adminlist.findOne({phoneno:req.body.num},function(err,result){
+	adminlist.findOne({phoneno:req.body.num, otp:req.body.temp},function(err,result){
 		if(err)
 			throw err;
 		else
 		{
-			if(result)
-				if(req.body.temp===result.otp){
-					adminlist.findOneAndUpdate({phoneno:req.body.num},
-					{$set:{otp:undefined}},function(err,found){
-						if(err)
-							throw err;
-						else
-							console.log("Updated");
-
-					});
-				createSendToken(result.adharno, 201, res);
-					res.redirect("/dashboard");
-				}
-			else
-					res.redirect("/wrongOTP");
+			if(result) {
+				adminlist.findOneAndUpdate({phoneno:req.body.num},{$set:{otp:undefined}},function(err1,found){
+					if(err1)
+						throw err1;
+					else
+						console.log("Updated");
+				});
+				createSendToken(result.adharno, res);
+				res.redirect("/dashboard");
+			}
+			else 
+				res.redirect("/wrongOTP");
 		}
 	});
 	
@@ -206,19 +202,18 @@ app.post("/loginUsingPassword",function(req,res){
 			if(result.length!=0)
 			{
 	  			bcrypt.compare(pas,result[0].password,function(err1,result1){
-					  if(result1==true)
-					  
-	  					{
-                            //console.log(result[0].adharno);
-							createSendToken(result[0].adharno, 201, res);
-							res.redirect("/dashboard");
+					if(result1)
+					{
+						createSendToken(result[0].adharno, res);
+						res.redirect("/dashboard");
 							
-						}
+					}
 	  				else
 	  					res.redirect("/wrongpass");
 	  			});
 	  		}	
-			
+			else
+				res.redirect("/wrongpass");
 		}
 	});
 });
@@ -229,31 +224,30 @@ app.post("/generateSignupOTP",function(req,res){
 	const num=req.body.number;
 	const adhaar=req.body.adhaar;
 	const number=parseInt("91"+req.body.number);
-	adminlist.find({phoneno:num},function(err,result){
+	adminlist.find({phoneno:num, adharno:adhaar},function(err,result){
 		if(err)
 			throw err;
 		else
 		{
-			if(result.length!=0&&result[0].adharno===adhaar)
-			{
-				console.log(result); 
+			if(result.length!=0)
+			{ 
 				Worker.find({adharno:adhaar},function(err1,result1){
 					if(err1) throw err1;
 					else if(result1.length==0)
 					{
 						const otp=randomInteger(100000,999999);
-						adminlist.findOneAndUpdate({phoneno:num},
-							{$set:{otp:otp}},function(err,found){
-								if(err)
-									throw err;
-								else
-									console.log("Updated");
-
-							});
-
-						sendOtp.send(number,"KKMAAD",otp, function (error, data) {
-			  			console.log(data);
-			  			res.send("Registered");});
+						adminlist.findOneAndUpdate({phoneno:num},{$set:{otp:otp}},function(err2,found){
+								if(err2)
+									throw err2;
+								else {
+									sendOtp.send(number,"KKMAAD",otp, function(error, data) {
+										if(error) 
+											throw error;
+										else
+											res.send("Registered");
+									});
+								}
+						});
 	  				}
 	  				else
 	  					res.send("Already Registered");
@@ -270,24 +264,21 @@ app.post("/generateSignupOTP",function(req,res){
 
 //verifying signup otp
 app.post("/verifySignupOTP",function (req,res){
-	adminlist.findOne({adharno:req.body.adhaar},function(err,result){
+	adminlist.findOne({adharno:req.body.adhaar, otp: req.body.num},function(err,result){
 		if(err)
 			throw err;
 		else
 		{
-			if(result)
-				if(req.body.num===result.otp){
-					adminlist.findOneAndUpdate({phoneno:req.body.num},
-					{$set:{otp:undefined}},function(err,found){
-						if(err)
-							throw err;
-						else
-							console.log("Updated");
+			if(result) {
+				adminlist.findOneAndUpdate({adharno:req.body.adhaar},{$set:{otp:undefined}},function(err1,found){
+					if(err1)
+						throw err1;
+					else
+						console.log("Updated");
 
-					});
-
-					res.render("signup-form",{adhaar:req.body.adhaar});//some changes
-				}
+				});
+				res.render("signup-form",{adhaar:req.body.adhaar});//some changes
+			}
 			else
 				res.redirect("/wrongOTP");
 		}
@@ -298,21 +289,20 @@ app.post("/verifySignupOTP",function (req,res){
 
 app.get("/logout",function(req,res){
 	res.cookie('jwt', 'loggedout', {
-		expires: new Date(Date.now() + 0* 1000),
+		expires: new Date(),
 		httpOnly: true
 	  });
 	  res.redirect("/");
-
 });
 
 app.get("/createAccount",function(req,res){
 	res.render("create-account");
-})
+});
 
 app.post("/signupSubmit",function(req,res){
 	var obj=req.body;
 	const p=bcrypt.hashSync(obj.password,12);
-	adminlist.findOne({adharno:obj.adhaar},function(err,result){
+	adminlist.findOne({adharno:obj.adhaar},async function(err,result){
 		if(err)
 			throw err;
 		else
@@ -330,10 +320,17 @@ app.post("/signupSubmit",function(req,res){
 					vacnum:0,
 					usernum:0
 				});
-				newWorker.save();
-				res.redirect("/login");
+				try {
+					await newWorker.save();
+					res.redirect("/login");
+				}
+				catch(ex) {
+					console.log(ex);
+					res.redirect("/createAccount");
+				}
 			}
-	
+			else
+				res.redirect("/createAccount");
 		});
 });
 
@@ -348,7 +345,7 @@ app.get("/wrongpass",function(req,res){
 
 
 
-app.get("/newworker",function(req,res){
+app.get("/newworker",async function(req,res){
 	const newadminlist =new adminlist(
 		{
 		adharno:"328479437459",
@@ -357,7 +354,7 @@ app.get("/newworker",function(req,res){
 		acode:"38"
 		}
 	)
-newadminlist.save();
+	await newadminlist.save();
 });
 
 
@@ -367,39 +364,35 @@ app.get("/forgotpass",function(req,res){
 
 
 app.post("/verifyforgotOTP",function (req,res){
-	adminlist.findOne({phoneno:req.body.num},function(err,result){
+	adminlist.findOne({phoneno:req.body.num, otp:req.body.temp},function(err,result){
 		if(err)
 			throw err;
 		else
 		{
-			if(result)
-				if(req.body.temp===result.otp){
-					adminlist.findOneAndUpdate({phoneno:req.body.num},
-					{$set:{otp:undefined}},function(err,found){
-						if(err)
-							throw err;
-						else
-							console.log("Updated");
+			if(result) {
+				adminlist.findOneAndUpdate({phoneno:req.body.num},{$set:{otp:undefined}},function(err1,found){
+					if(err1)
+						throw err1;
+					else
+						console.log("Updated");
 
-					});
-					Worker.findOneAndUpdate({phoneno:req.body.num},
-					{$set:{password:bcrypt.hashSync(req.body.password,12)}},function(err,found){
-						if(err)
-							throw err;
-						else
-							console.log("Updated");
-
-					});
-
-					res.redirect("/login");
-				}
+				});
+				Worker.findOneAndUpdate({phoneno:req.body.num},{$set:{password:bcrypt.hashSync(req.body.password,12)}},function(err2,found){
+					if(err2)
+						throw err2;
+					else {
+						console.log("Updated");
+						res.redirect("/login");
+					}
+				});
+			}
 			else
-					res.redirect("/wrongOTP");
+				res.redirect("/wrongOTP");
 		}
 	});
-	
 });
-app.post("/newUser",function(req,res){
+
+app.post("/newUser", async function(req,res){
 	const obj=req.body;
 		const newUser=new User({
 			name:obj.name,
@@ -422,7 +415,7 @@ app.post("/newUser",function(req,res){
 			lat:obj.lat,
 			long:obj.long
 		});
-		newUser.save();
+		await newUser.save();
 		res.redirect("/dashboard")
 });
 app.post("/upsmsSend",function(req,res){
@@ -448,8 +441,3 @@ app.get("/",function(req,res){
 	res.render("index");
 });
 
-app.get("*/",function(req,res){
-	res
-	.status('404')
-	.end("<h1 style=\"color:blue;font-size:3rem\">ERROR 404 <br>PLEASE CONTACT TO ADMINISTRATOR</h1>");
-});
