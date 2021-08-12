@@ -39,9 +39,9 @@ mongoose.connect("mongodb+srv://poshan_test:poshan123@cluster0-cbwkg.mongodb.net
 				});
 
 
-
-app.listen(3000, function() {
-	console.log("Server started on port 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, function() {
+	console.log("Server started on port ", PORT);
 });
 
 
